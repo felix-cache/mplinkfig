@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
   "datetime",
   "matplotlib",
-  "os",
   "shutils",
 ]
 
