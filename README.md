@@ -20,3 +20,5 @@ pip install git+https://github.com/felix-cache/mplinkfig.git
 
 `mplinkfig` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
 # mplinkfig
+
+Make figures with matplotlib and inkscape
