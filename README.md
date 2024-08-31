@@ -13,7 +13,7 @@
 ## Installation
 
 ```console
-pip install mplinkfig
+pip install git+https://github.com/felix-cache/mplinkfig.git
 ```
 
 ## License

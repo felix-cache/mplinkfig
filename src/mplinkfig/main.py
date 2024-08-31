@@ -1,8 +1,12 @@
+
+
 import shutil
 import os
 from os.path import getmtime
 import datetime
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 
 def figunits(value,axis='x',fig=None):
@@ -14,7 +18,7 @@ def figunits(value,axis='x',fig=None):
 
 
 
-def InkFig(fname, fig=None,  pdf=False, png=False):
+def InkscapeFigure(fname, fig=None,  pdf=False, png=False):
 
     if fig == None: fig = plt.gcf()
 
@@ -54,6 +58,7 @@ def InkFig(fname, fig=None,  pdf=False, png=False):
     if png: svg_to_png(fname)
 
     return
+
 
 
 def get_figsize(svgfile):
@@ -149,7 +154,8 @@ def create_block_file(fname, blockid='figure_1'):
                 break
             f.write(l)
 
-    f.close()
+    f.close()# -*- coding: utf-8 -*-
+
 
     return '__temp_'+blockid+'__.svg'
 
