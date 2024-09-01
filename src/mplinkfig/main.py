@@ -20,22 +20,20 @@ def figunits(value,axis='x',fig=None):
 
 
 
-def InkFig(fname, fig=None, show=False, pdf=False, png=False):
+def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     """ actualize the figure elements created with matplotlib while keeping the changes perforemd with inkscape """
-
-    if fig == None: fig = plt.gcf()
 
     if fname[-3:]!='svg': fname+='.svg'
 
     if not os.path.isfile(fname):
-        fig.savefig(fname, transparent=False)
+        fig.savefig(fname, transparent=transparent)
         return
 
     # create a checkpoint in /.filename
     create_checkpoint(fname)
 
     # save the matplotlib file
-    fig.savefig('__temp_mpl__.svg', transparent=False)
+    fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
     # if needed put back to lines between blocks
