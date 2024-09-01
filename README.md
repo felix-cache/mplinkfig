@@ -143,7 +143,10 @@ ax.set_xlabel('xlabel2')
 ax.set_ylabel('ylabel2')
 ax.legend(frameon=False)
 
-InkFig(fig,'exemple.svg, show=True)
+InkFig(fig,'exemple.svg', show=True)
 ```
 ![Alt text](./tests/ex2.svg)
 
+We can restart these operations until we obtain the desired result.
+
+Each time you run InkFig(fig,'path/filename.svg'), a copy of the previous version is saved in path/.filename. Above 20 executions the oldest versions are deleted.
