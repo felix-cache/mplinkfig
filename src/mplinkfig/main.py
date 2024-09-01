@@ -6,10 +6,12 @@ from os.path import getmtime
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+from IPython.display import display, SVG
 
 
 
 def figunits(value,axis='x',fig=None):
+    """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') """
     if fig == None: fig = plt.gcf()
     w,h = fig.get_size_inches()
     if axis=='x': return value/w
@@ -18,7 +20,8 @@ def figunits(value,axis='x',fig=None):
 
 
 
-def InkscapeFigure(fname, fig=None,  pdf=False, png=False):
+def InkFig(fname, fig=None, show=False, pdf=False, png=False):
+    """ actualize the figure elements created with matplotlib while keeping the changes perforemd with inkscape """
 
     if fig == None: fig = plt.gcf()
 
@@ -56,6 +59,11 @@ def InkscapeFigure(fname, fig=None,  pdf=False, png=False):
     # save fig to an other format
     if pdf: svg_to_pdf(fname)
     if png: svg_to_png(fname)
+
+    # show inkscape part
+    if show:
+        #fig.set_visible(False)
+        display(SVG(fname))
 
     return
 

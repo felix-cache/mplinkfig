@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
   "datetime",
+  "ipython",
   "matplotlib",
   "numpy",
 ]

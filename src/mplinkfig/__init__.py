@@ -2,4 +2,4 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .main import figunits, InkscapeFigure
+from .main import figunits, InkFig
