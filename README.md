@@ -112,10 +112,10 @@ ax.set_ylabel('ylabel2')
 ```console
 InkFig(fig, 'exemple.svg', show=True)
 ```
-![Alt text](tests/ex0.svg)
+![Alt text](./tests/ex0.svg)
 
 ### After some modifications with inkscape
-![Alt text](tests/ex1.svg)
+![Alt text](./tests/ex1.svg)
 
 ### Now we can modify the figure with mpl without loosing the modifications performed with inkscape
 ```console
@@ -145,5 +145,5 @@ ax.legend(frameon=False)
 
 InkFig(fig,'exemple.svg, show=True)
 ```
-![Alt text](tests/ex2.svg)
+![Alt text](./tests/ex2.svg)
 
