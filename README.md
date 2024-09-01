@@ -88,7 +88,7 @@ fig.subplots_adjust( #for the exemple we use the same width for the 4 margins
 )
 ```
 
-### Add a 200x200 grid to define figures location
+### Add a 200x200 grid to define plots location
 ```console
 gs = fig.add_gridspec(200, 200)
 ```
