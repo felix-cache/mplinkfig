@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .main import figunits, InkFig,  svg_to_pdf
-from .main import svg_to_pdf as svg2pdf
-from .main import svg_to_png as svg2png
+#from .main import figunits, InkFig
+#from .main import svg_to_pdf as svg2pdf
+#from .main import svg_to_png as svg2png
 
