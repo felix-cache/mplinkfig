@@ -64,8 +64,6 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
         showSVG(fname)
     return
 
-def showSVG(fname):
-    display(SVG(fname))
 
 
 def get_figsize(svgfile):
@@ -349,4 +347,10 @@ def svg_to_png(fname):
         print('export to png failed')
 
 
+def showSVG(fname):
+    if fname[-4:]!='.svg' : fname+='.svg'
+    try:
+        display(SVG(fname))
+    except:
+        print('error')
 
