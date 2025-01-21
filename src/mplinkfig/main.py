@@ -296,31 +296,56 @@ def reformat_b2l(fname):
 
 
 
+#def svg_to_pdf(fname):
+    #""" Needs inkscape in the path to work ! """
+    #try:
+        #if os.name == 'nt':
+            #cmd = 'inkscape.exe --without-gui --export-area-page --file="'+fname+'" --export-pdf="'+fname[:-3]+'.pdf" --export-dpi=72.27'
+        #else:
+            #cmd = 'inkscape --without-gui --export-area-page --file="'+fname+'"  --export-type "pdf" --export-dpi 72.27'
+        #os.system(cmd)
+    #except:
+        #print('export to pdf failed')
+
 def svg_to_pdf(fname):
     """ Needs inkscape in the path to work ! """
+    if fname[-4:]!='.svg' : fname=fname[:-4]
+
+    ik = 'inkscape'
+    if os.name == 'nt':ik+='.exe'
+
     try:
-        if os.name == 'nt':
-            cmd = 'inkscape.exe --without-gui --export-area-page --file="'+fname+'" --export-pdf="'+fname[:-3]+'.pdf" --export-dpi=72.27'
-        else:
-            cmd = 'inkscape --without-gui --export-area-page --file="'+fname+'"  --export-type "pdf" --export-dpi 72.27'
+        cmd = ik+' '+fname+'.svg -o '+fname+'.pdf'
         os.system(cmd)
     except:
         print('export to pdf failed')
 
+
+#def svg_to_png(fname):
+    #""" Needs inkscape in the path to work ! """
+    #try:
+        #if os.name == 'nt':
+            #cmd = 'inkscape.exe --without-gui --export-area-page --file="'+fname+'" --export-png="'+fname[:-3]+'.png" --export-dpi=72.27'
+        #else:
+            #cmd = 'inkscape --without-gui --export-area-page --file="'+fname+'"  --export-type "png" --export-dpi 72.27'
+        #os.system(cmd)
+    #except:
+        #print('export to png failed')
+
+
+
 def svg_to_png(fname):
     """ Needs inkscape in the path to work ! """
+    if fname[-4:]!='.svg' : fname=fname[:-4]
+
+    ik = 'inkscape'
+    if os.name == 'nt':ik+='.exe'
+
     try:
-        if os.name == 'nt':
-            cmd = 'inkscape.exe --without-gui --export-area-page --file="'+fname+'" --export-png="'+fname[:-3]+'.png" --export-dpi=72.27'
-        else:
-            cmd = 'inkscape --without-gui --export-area-page --file="'+fname+'"  --export-type "png" --export-dpi 72.27'
+        cmd = ik+' '+fname+'.svg -o '+fname+'.png'
         os.system(cmd)
     except:
         print('export to png failed')
-
-
-
-
 
 
 
