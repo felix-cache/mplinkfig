@@ -61,10 +61,11 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # show inkscape part
     if show:
         #fig.set_visible(False)
-        display(SVG(fname))
-
+        showSVG(fname)
     return
 
+def showSVG(fname):
+    display(SVG(fname))
 
 
 def get_figsize(svgfile):
