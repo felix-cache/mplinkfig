@@ -308,7 +308,7 @@ def reformat_b2l(fname):
 
 def svg_to_pdf(fname):
     """ Needs inkscape in the path to work ! """
-    if fname[-4:]!='.svg' : fname=fname[:-4]
+    if fname[-4:]=='.svg' : fname=fname[:-4]
 
     ik = 'inkscape'
     if os.name == 'nt':ik+='.exe'
@@ -335,7 +335,7 @@ def svg_to_pdf(fname):
 
 def svg_to_png(fname):
     """ Needs inkscape in the path to work ! """
-    if fname[-4:]!='.svg' : fname=fname[:-4]
+    if fname[-4:]=='.svg' : fname=fname[:-4]
 
     ik = 'inkscape'
     if os.name == 'nt':ik+='.exe'
