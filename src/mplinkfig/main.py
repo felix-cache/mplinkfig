@@ -356,12 +356,6 @@ def reformat_b2l(fname):
     for l in new_lines: f.write(l)
     f.close()
 
-def fix_xml_space(svgfile):
-    with open(svgfile, 'r') as f:
-        content = f.read()
-    content = content.replace('xml:space="preserve"', 'xml:space="default"')
-    with open(svgfile, 'w') as f:
-        f.write(content)
 
 
 def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
@@ -390,13 +384,9 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # replace the old maptplotlib block by the new one
     replace_block(fname, 'figure_1')
 
-
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
-
-    #replace xml:space="preserve" by xml:space="default"
-    fix_xml_space(fname)
 
     # remove temporary files
     os.remove(mpl_file)
