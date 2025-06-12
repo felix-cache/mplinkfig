@@ -46,6 +46,9 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # replace the old maptplotlib block by the new one
     replace_block(fname, 'figure_1')
 
+    #replace xml:space="preserve" by xml:space="default"
+    fix_xml_space(fname)
+
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
@@ -293,18 +296,13 @@ def reformat_b2l(fname):
     for l in new_lines: f.write(l)
     f.close()
 
+def fix_xml_space(svgfile):
+    with open(svgfile, 'r') as f:
+        content = f.read()
+    content = content.replace('xml:space="preserve"', 'xml:space="default"')
+    with open(svgfile, 'w') as f:
+        f.write(content)
 
-
-#def svg_to_pdf(fname):
-    #""" Needs inkscape in the path to work ! """
-    #try:
-        #if os.name == 'nt':
-            #cmd = 'inkscape.exe --without-gui --export-area-page --file="'+fname+'" --export-pdf="'+fname[:-3]+'.pdf" --export-dpi=72.27'
-        #else:
-            #cmd = 'inkscape --without-gui --export-area-page --file="'+fname+'"  --export-type "pdf" --export-dpi 72.27'
-        #os.system(cmd)
-    #except:
-        #print('export to pdf failed')
 
 def svg_to_pdf(fname):
     """ Needs inkscape in the path to work ! """
@@ -318,18 +316,6 @@ def svg_to_pdf(fname):
         os.system(cmd)
     except:
         print('export to pdf failed')
-
-
-#def svg_to_png(fname):
-    #""" Needs inkscape in the path to work ! """
-    #try:
-        #if os.name == 'nt':
-            #cmd = 'inkscape.exe --without-gui --export-area-page --file="'+fname+'" --export-png="'+fname[:-3]+'.png" --export-dpi=72.27'
-        #else:
-            #cmd = 'inkscape --without-gui --export-area-page --file="'+fname+'"  --export-type "png" --export-dpi 72.27'
-        #os.system(cmd)
-    #except:
-        #print('export to png failed')
 
 
 
