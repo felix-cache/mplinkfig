@@ -1,5 +1,3 @@
-
-
 import shutil
 import os
 from os.path import getmtime
@@ -7,7 +5,7 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display, SVG
-
+from lxml import etree
 
 
 def figunits(value,axis='x',fig=None):
@@ -36,27 +34,14 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
-    # if needed put back to lines between blocks
-    #reformat_b2l('__temp_mpl__.svg')
-    #reformat_b2l(fname)
-
-    # extract the figure element of the mpl file (and save it in a file __temp_elementname__.svg)
-    #mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
-
-    # replace the old maptplotlib block by the new one
-    #replace_block(fname, 'figure_1')
-
+    # replace the mpl block of the inkscape file with the one from the new matplotlib figure
     replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
-        set_figsize(fname,width,height)
 
-    #replace xml:space="preserve" by xml:space="default"
-    #fix_xml_space(fname)
 
-    # remove temporary files
-    #os.remove(mpl_file)
+    # remove temporary file
     os.remove('__temp_mpl__.svg')
 
     # save fig to an other format
@@ -65,7 +50,6 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
 
     # show inkscape part
     if show:
-        #fig.set_visible(False)
         showSVG(fname)
     return
 
@@ -125,52 +109,6 @@ def create_checkpoint(fname):
     return
 
 
-'''
-def create_block_file(fname, blockid='figure_1'):
-    lines = open(fname,'r').readlines()
-
-    i,j=0,0
-    str_id = 'id="'+blockid+'"'
-    for i in range(len(lines)):
-        if str_id in lines[i] :
-            break
-    if i == len(lines)-1 :
-        print('id not found')
-        return
-    for j in range(i,-1,-1) :
-        if '<' in lines[j] :
-            break
-
-    counter = 0
-    f = open('__temp_'+blockid+'__.svg','w')
-    for k in range(j,len(lines)) :
-        l = lines[k]
-        f.write(l)
-        if not '<!--' in l:
-            for i in range(len(l)):
-                if l[i:i+2]=='</' :
-                    counter-=1
-                    break
-                if l[i]=='<' :
-                    counter+=1
-                if l[i:i+2]=='/>' :
-                    counter-=1
-
-        if counter == 0 : break
-
-    if blockid=='figure_1':
-        for l in lines[k+1:]:
-            if '</svg>' in l :
-                break
-            f.write(l)
-
-    f.close()# -*- coding: utf-8 -*-
-
-
-    return '__temp_'+blockid+'__.svg'
-'''
-
-
 def set_figsize(svgfile,width,height):
     lines = open(svgfile,'r').readlines()
     done = False
@@ -225,67 +163,10 @@ def set_figsize(svgfile,width,height):
     return
 
 
-'''
-def replace_block(fname,blockid='figure_1'):
-    new_block_lines = open('__temp_'+blockid+'__.svg','r').readlines()
-    old_file_lines = open(fname,'r').readlines()
 
-    i,j,k=0,0,0
-    str_id = 'id="'+blockid+'"'
-    for i in range(len(old_file_lines)):
-        if str_id in old_file_lines[i] :
-            break
-    if i == len(old_file_lines)-1 :
-        print('id not found')
-        return
-    for j in range(i,-1,-1) :
-        if '<' in old_file_lines[j] :
-            break
-
-    counter = 0
-    for k in range (j,len(old_file_lines)) :
-        l = old_file_lines[k]
-        if not '<!--' in l:
-                for i in range(len(l)):
-                    if l[i:i+2]=='</' :
-                        counter-=1
-                        break
-                    if l[i]=='<' :
-                        counter+=1
-                    if l[i:i+2]=='/>' :
-                        counter-=1
-
-        if counter == 0 : break
-
-    f = open(fname,'w')
-    #ff = open('__old_file_lines__.svg','w')
-    for l in old_file_lines[:j] :
-        f.write(l)
-    #    ff.write(l)
-
-    for l in new_block_lines:
-        f.write(l)
-
-    for l in old_file_lines[k+1:]:
-        f.write(l)
-    #    ff.write(l)
-
-    f.close()
-    return
-'''
 
 def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
-    """
-    Replace the <g id=...> block in the Inkscape-edited SVG with the same one from the Matplotlib-generated SVG.
 
-    Parameters:
-        inkscape_svg (str): Path to the edited SVG (with manual edits)
-        mpl_svg (str): Path to the newly generated matplotlib SVG
-        blockid (str): The ID of the <g> element to replace (default = 'figure_1')
-
-    Returns:
-        None (writes modified content back to inkscape_svg)
-    """
     parser = etree.XMLParser(remove_blank_text=False)
 
     # Load both SVGs
@@ -365,7 +246,6 @@ def svg_to_pdf(fname):
         print('export to pdf failed')
 
 
-
 def svg_to_png(fname):
     """ Needs inkscape in the path to work ! """
     if fname[-4:]=='.svg' : fname=fname[:-4]
@@ -387,3 +267,149 @@ def showSVG(fname):
     except:
         print('error')
 
+
+
+
+
+
+'''
+def replace_block(fname,blockid='figure_1'):
+    new_block_lines = open('__temp_'+blockid+'__.svg','r').readlines()
+    old_file_lines = open(fname,'r').readlines()
+
+    i,j,k=0,0,0
+    str_id = 'id="'+blockid+'"'
+    for i in range(len(old_file_lines)):
+        if str_id in old_file_lines[i] :
+            break
+    if i == len(old_file_lines)-1 :
+        print('id not found')
+        return
+    for j in range(i,-1,-1) :
+        if '<' in old_file_lines[j] :
+            break
+
+    counter = 0
+    for k in range (j,len(old_file_lines)) :
+        l = old_file_lines[k]
+        if not '<!--' in l:
+                for i in range(len(l)):
+                    if l[i:i+2]=='</' :
+                        counter-=1
+                        break
+                    if l[i]=='<' :
+                        counter+=1
+                    if l[i:i+2]=='/>' :
+                        counter-=1
+
+        if counter == 0 : break
+
+    f = open(fname,'w')
+    #ff = open('__old_file_lines__.svg','w')
+    for l in old_file_lines[:j] :
+        f.write(l)
+    #    ff.write(l)
+
+    for l in new_block_lines:
+        f.write(l)
+
+    for l in old_file_lines[k+1:]:
+        f.write(l)
+    #    ff.write(l)
+
+    f.close()
+    return
+
+def create_block_file(fname, blockid='figure_1'):
+    lines = open(fname,'r').readlines()
+
+    i,j=0,0
+    str_id = 'id="'+blockid+'"'
+    for i in range(len(lines)):
+        if str_id in lines[i] :
+            break
+    if i == len(lines)-1 :
+        print('id not found')
+        return
+    for j in range(i,-1,-1) :
+        if '<' in lines[j] :
+            break
+
+    counter = 0
+    f = open('__temp_'+blockid+'__.svg','w')
+    for k in range(j,len(lines)) :
+        l = lines[k]
+        f.write(l)
+        if not '<!--' in l:
+            for i in range(len(l)):
+                if l[i:i+2]=='</' :
+                    counter-=1
+                    break
+                if l[i]=='<' :
+                    counter+=1
+                if l[i:i+2]=='/>' :
+                    counter-=1
+
+        if counter == 0 : break
+
+    if blockid=='figure_1':
+        for l in lines[k+1:]:
+            if '</svg>' in l :
+                break
+            f.write(l)
+
+    f.close()# -*- coding: utf-8 -*-
+
+
+    return '__temp_'+blockid+'__.svg'
+
+
+def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
+    """ actualize the figure elements created with matplotlib while keeping the changes perforemd with inkscape """
+
+    if fname[-3:]!='svg': fname+='.svg'
+
+    if not os.path.isfile(fname):
+        fig.savefig(fname, transparent=transparent)
+        return
+
+    # create a checkpoint in /.filename
+    create_checkpoint(fname)
+
+    # save the matplotlib file
+    fig.savefig('__temp_mpl__.svg', transparent=transparent)
+    width, height = get_figsize('__temp_mpl__.svg')
+
+    # if needed put back to lines between blocks
+    reformat_b2l('__temp_mpl__.svg')
+    reformat_b2l(fname)
+
+    # extract the figure element of the mpl file (and save it in a file __temp_elementname__.svg)
+    mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
+
+    # replace the old maptplotlib block by the new one
+    replace_block(fname, 'figure_1')
+
+
+    # adjust the size if needed
+    if get_figsize(fname) != (width,height) :
+        set_figsize(fname,width,height)
+
+    replace xml:space="preserve" by xml:space="default"
+    fix_xml_space(fname)
+
+    # remove temporary files
+    os.remove(mpl_file)
+    os.remove('__temp_mpl__.svg')
+
+    # save fig to an other format
+    if pdf: svg_to_pdf(fname)
+    if png: svg_to_png(fname)
+
+    # show inkscape part
+    if show:
+        #fig.set_visible(False)
+        showSVG(fname)
+    return
+
+'''
