@@ -46,12 +46,12 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # replace the old maptplotlib block by the new one
     replace_block(fname, 'figure_1')
 
-    #replace xml:space="preserve" by xml:space="default"
-    fix_xml_space(fname)
-
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
+
+    #replace xml:space="preserve" by xml:space="default"
+    fix_xml_space(fname)
 
     # remove temporary files
     os.remove(mpl_file)
