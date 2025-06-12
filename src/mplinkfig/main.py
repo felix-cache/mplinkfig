@@ -299,7 +299,7 @@ def reformat_b2l(fname):
 def fix_xml_space(svgfile):
     with open(svgfile, 'r') as f:
         content = f.read()
-    content = content.replace('xml:space="preserve"', '')
+    content = content.replace('xml:space="preserve"', 'xml:space="default"')
     with open(svgfile, 'w') as f:
         f.write(content)
 
