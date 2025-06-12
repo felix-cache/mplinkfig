@@ -164,7 +164,6 @@ def set_figsize(svgfile,width,height):
 
 
 
-
 def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
 
     parser = etree.XMLParser(remove_blank_text=False)
@@ -198,38 +197,8 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
     parent.replace(block_ink, block_mpl)
 
     # Write back to the Inkscape file
-    tree_ink.write(inkscape_svg, encoding='utf-8',
+    tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
 
-
-def reformat_b2l(fname):
-    lines = open(fname,'r').readlines()
-    f = open(fname,'w')
-    new_lines = []
-    b2l = lines[0][-1]
-    add_line = True
-    i=0
-    while i < len(lines):
-        if add_line: new_lines.append(lines[i])
-        l = new_lines[-1]
-        for j in range(len(l)):
-            add_line = True
-            if l[j:j+2]=='><':
-                new_lines[-1]= l[:j+1]+b2l
-                new_lines.append(l[j+1:])
-                add_line = False
-                break
-        if j==len(l)-1:
-            add_line = True
-            i+=1
-    for l in new_lines: f.write(l)
-    f.close()
-
-def fix_xml_space(svgfile):
-    with open(svgfile, 'r') as f:
-        content = f.read()
-    content = content.replace('xml:space="preserve"', 'xml:space="default"')
-    with open(svgfile, 'w') as f:
-        f.write(content)
 
 
 def svg_to_pdf(fname):
@@ -362,6 +331,37 @@ def create_block_file(fname, blockid='figure_1'):
 
 
     return '__temp_'+blockid+'__.svg'
+
+
+def reformat_b2l(fname):
+    lines = open(fname,'r').readlines()
+    f = open(fname,'w')
+    new_lines = []
+    b2l = lines[0][-1]
+    add_line = True
+    i=0
+    while i < len(lines):
+        if add_line: new_lines.append(lines[i])
+        l = new_lines[-1]
+        for j in range(len(l)):
+            add_line = True
+            if l[j:j+2]=='><':
+                new_lines[-1]= l[:j+1]+b2l
+                new_lines.append(l[j+1:])
+                add_line = False
+                break
+        if j==len(l)-1:
+            add_line = True
+            i+=1
+    for l in new_lines: f.write(l)
+    f.close()
+
+def fix_xml_space(svgfile):
+    with open(svgfile, 'r') as f:
+        content = f.read()
+    content = content.replace('xml:space="preserve"', 'xml:space="default"')
+    with open(svgfile, 'w') as f:
+        f.write(content)
 
 
 def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
