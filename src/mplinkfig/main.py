@@ -37,24 +37,26 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     width, height = get_figsize('__temp_mpl__.svg')
 
     # if needed put back to lines between blocks
-    reformat_b2l('__temp_mpl__.svg')
-    reformat_b2l(fname)
+    #reformat_b2l('__temp_mpl__.svg')
+    #reformat_b2l(fname)
 
     # extract the figure element of the mpl file (and save it in a file __temp_elementname__.svg)
-    mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
+    #mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
 
     # replace the old maptplotlib block by the new one
-    replace_block(fname, 'figure_1')
+    #replace_block(fname, 'figure_1')
+
+    replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
 
     #replace xml:space="preserve" by xml:space="default"
-    fix_xml_space(fname)
+    #fix_xml_space(fname)
 
     # remove temporary files
-    os.remove(mpl_file)
+    #os.remove(mpl_file)
     os.remove('__temp_mpl__.svg')
 
     # save fig to an other format
@@ -123,7 +125,7 @@ def create_checkpoint(fname):
     return
 
 
-
+'''
 def create_block_file(fname, blockid='figure_1'):
     lines = open(fname,'r').readlines()
 
@@ -166,7 +168,7 @@ def create_block_file(fname, blockid='figure_1'):
 
 
     return '__temp_'+blockid+'__.svg'
-
+'''
 
 
 def set_figsize(svgfile,width,height):
@@ -223,7 +225,7 @@ def set_figsize(svgfile,width,height):
     return
 
 
-
+'''
 def replace_block(fname,blockid='figure_1'):
     new_block_lines = open('__temp_'+blockid+'__.svg','r').readlines()
     old_file_lines = open(fname,'r').readlines()
@@ -270,7 +272,52 @@ def replace_block(fname,blockid='figure_1'):
 
     f.close()
     return
+'''
 
+def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
+    """
+    Replace the <g id=...> block in the Inkscape-edited SVG with the same one from the Matplotlib-generated SVG.
+
+    Parameters:
+        inkscape_svg (str): Path to the edited SVG (with manual edits)
+        mpl_svg (str): Path to the newly generated matplotlib SVG
+        blockid (str): The ID of the <g> element to replace (default = 'figure_1')
+
+    Returns:
+        None (writes modified content back to inkscape_svg)
+    """
+    parser = etree.XMLParser(remove_blank_text=False)
+
+    # Load both SVGs
+    tree_ink = etree.parse(inkscape_svg, parser)
+    root_ink = tree_ink.getroot()
+
+    tree_mpl = etree.parse(mpl_svg, parser)
+    root_mpl = tree_mpl.getroot()
+
+    ns = root_ink.nsmap.copy()
+    if None in ns:
+        ns['svg'] = ns.pop(None)
+
+    # Find <g id="figure_1"> in both
+    xpath = f'.//svg:g[@id="{blockid}"]'
+    block_mpl = root_mpl.xpath(xpath, namespaces=ns)
+    block_ink = root_ink.xpath(xpath, namespaces=ns)
+
+    if not block_mpl:
+        raise ValueError(f'Block id="{blockid}" not found in {mpl_svg}')
+    if not block_ink:
+        raise ValueError(f'Block id="{blockid}" not found in {inkscape_svg}')
+
+    block_mpl = block_mpl[0]
+    block_ink = block_ink[0]
+
+    # Replace the Inkscape block with the Matplotlib one
+    parent = block_ink.getparent()
+    parent.replace(block_ink, block_mpl)
+
+    # Write back to the Inkscape file
+    tree_ink.write(inkscape_svg, encoding='utf-8',
 
 
 def reformat_b2l(fname):
