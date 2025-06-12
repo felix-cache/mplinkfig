@@ -39,7 +39,7 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
 
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
-
+        set_figsize(fname,width,height)
 
     # remove temporary file
     os.remove('__temp_mpl__.svg')
@@ -395,7 +395,7 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
 
-    replace xml:space="preserve" by xml:space="default"
+    #replace xml:space="preserve" by xml:space="default"
     fix_xml_space(fname)
 
     # remove temporary files
