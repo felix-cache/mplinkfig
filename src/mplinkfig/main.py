@@ -204,7 +204,7 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
 
 
 
-ef add_missing_clipPaths(svg_inkscape_path, svg_mpl_path):
+ef add_defs(svg_inkscape_path, svg_mpl_path):
     # Parse both SVG files
     parser = etree.XMLParser(remove_blank_text=True)
     tree_ink = etree.parse(svg_inkscape_path, parser)
