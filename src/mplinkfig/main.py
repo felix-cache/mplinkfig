@@ -189,52 +189,6 @@ def reformat_b2l(fname):
 
 
 
-def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
-    """ actualize the figure elements created with matplotlib while keeping the changes perforemd with inkscape """
-
-    if fname[-3:]!='svg': fname+='.svg'
-
-    if not os.path.isfile(fname):
-        fig.savefig(fname, transparent=transparent)
-        return
-
-    # create a checkpoint in /.filename
-    create_checkpoint(fname)
-
-    # save the matplotlib file
-    fig.savefig('__temp_mpl__.svg', transparent=transparent)
-    width, height = get_figsize('__temp_mpl__.svg')
-
-    # if needed put back to lines between blocks
-    reformat_b2l('__temp_mpl__.svg')
-    reformat_b2l(fname)
-
-    # extract the figure element of the mpl file (and save it in a file __temp_elementname__.svg)
-    mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
-
-    # replace the old maptplotlib block by the new one
-    replace_block(fname, 'figure_1')
-
-    # adjust the size if needed
-    if get_figsize(fname) != (width,height) :
-        set_figsize(fname,width,height)
-
-    # remove temporary files
-    os.remove(mpl_file)
-    os.remove('__temp_mpl__.svg')
-
-    # save fig to an other format
-    if pdf: svg_to_pdf(fname)
-    if png: svg_to_png(fname)
-
-    # show inkscape part
-    if show:
-        #fig.set_visible(False)
-        showSVG(fname)
-    return
-
-
-# -
 
 def get_figsize(svgfile):
     file = open(svgfile,'r')
