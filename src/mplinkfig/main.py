@@ -109,17 +109,14 @@ def replace_block(fname,blockid='figure_1'):
         if counter == 0 : break
 
     f = open(fname,'w')
-    #ff = open('__old_file_lines__.svg','w')
     for l in old_file_lines[:j] :
         f.write(l)
-    #    ff.write(l)
 
     for l in new_block_lines:
         f.write(l)
 
     for l in old_file_lines[k+1:]:
         f.write(l)
-    #    ff.write(l)
 
     f.close()
     return
@@ -162,7 +159,7 @@ def create_block_file(fname, blockid='figure_1'):
                 break
             f.write(l)
 
-    f.close()# -*- coding: utf-8 -*-
+    f.close()
 
 
     return '__temp_'+blockid+'__.svg'
