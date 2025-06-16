@@ -9,7 +9,7 @@ from lxml import etree
 import svgutils.transform as sg
 
 def figunits(value,axis='x',fig=None):
-    """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') """
+    """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') aazfzfofio"""
     if fig == None: fig = plt.gcf()
     w,h = fig.get_size_inches()
     if axis=='x': return value/w
