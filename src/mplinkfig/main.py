@@ -35,9 +35,9 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     width, height = get_figsize('__temp_mpl__.svg')
 
     # replace the mpl block of the inkscape file with the one from the new matplotlib figure
-    replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
     add_defs(fname,'__temp_mpl__.svg' )
+    replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
@@ -204,31 +204,45 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
 
 
 
-def add_defs(inkscape_svg, mpl_svg, output_svg=None):
-
-    parser = etree.XMLParser(remove_blank_text=False)
-
-    tree_ink = etree.parse(inkscape_svg, parser)
+ef add_missing_clipPaths(svg_inkscape_path, svg_mpl_path):
+    # Parse both SVG files
+    parser = etree.XMLParser(remove_blank_text=True)
+    tree_ink = etree.parse(svg_inkscape_path, parser)
     root_ink = tree_ink.getroot()
-
-    tree_mpl = etree.parse(mpl_svg, parser)
+    tree_mpl = etree.parse(svg_mpl_path, parser)
     root_mpl = tree_mpl.getroot()
 
-    ns = {'svg': 'http://www.w3.org/2000/svg'}
-    defs_ink = root_ink.find('svg:defs', namespaces=ns)
+    # Namespace handling (usually SVG namespace)
+    ns = root_ink.nsmap.get(None) or "http://www.w3.org/2000/svg"
+    nsmap = {'svg': ns}
+
+    # Find <defs> in both SVGs (create if not found in inkscape svg)
+    defs_ink = root_ink.find('svg:defs', nsmap)
     if defs_ink is None:
-        defs_ink = etree.SubElement(root_ink, '{http://www.w3.org/2000/svg}defs')
+        defs_ink = etree.SubElement(root_ink, '{%s}defs' % ns)
 
-    defs_mpl = root_mpl.find('svg:defs', namespaces=ns)
-    if defs_mpl is not None:
-        existing_ids = {e.get("id") for e in defs_ink.iter() if e.get("id")}
-        for child in defs_mpl:
-            cid = child.get("id")
-            if cid and cid not in existing_ids:
-                defs_ink.append(child)
+    defs_mpl = root_mpl.find('svg:defs', nsmap)
+    if defs_mpl is None:
+        print("Matplotlib SVG has no <defs>, nothing to add.")
+        return
 
-    # Output
-    tree_ink.write(inkscape_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
+    # Collect existing clipPath ids in inkscape defs
+    existing_ids = {elem.get('id') for elem in defs_ink.findall('svg:clipPath', nsmap)}
+
+    # For each clipPath in mpl defs, add it if missing in inkscape defs
+    added_count = 0
+    for clipPath in defs_mpl.findall('svg:clipPath', nsmap):
+        cid = clipPath.get('id')
+        if cid not in existing_ids:
+            defs_ink.append(clipPath)
+            added_count += 1
+
+    if added_count > 0:
+        tree_ink.write(svg_inkscape_path, pretty_print=True, xml_declaration=True, encoding='utf-8')
+        print(f"Added {added_count} missing clipPath(s) to '{svg_inkscape_path}'.")
+    else:
+        print("No missing clipPaths to add.")
+
 
 
 
