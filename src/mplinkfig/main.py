@@ -34,7 +34,7 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
-    merge_defs_blocks(fname,'__temp_mpl__.svg' )
+    merge_defs(fname,'__temp_mpl__.svg' )
     # replace the mpl block of the inkscape file with the one from the new matplotlib figure
     replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
@@ -200,45 +200,35 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
     tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
 
 
-def merge_defs_blocks(inkscape_svg, mpl_svg, output_svg=None):
-    """
-    Merge <defs> from Matplotlib SVG into the existing Inkscape SVG without removing Inkscape-defined elements.
-    Avoids duplication by checking id attributes.
-    """
+def merge_defs(inkscape_svg, mpl_svg, output_svg=None):
     parser = etree.XMLParser(remove_blank_text=False)
+
     tree_ink = etree.parse(inkscape_svg, parser)
     root_ink = tree_ink.getroot()
+
     tree_mpl = etree.parse(mpl_svg, parser)
     root_mpl = tree_mpl.getroot()
 
-    nsmap = root_ink.nsmap
-    svg_ns = nsmap.get(None, 'http://www.w3.org/2000/svg')
-
-    def find_defs(root):
-        for el in root:
-            if el.tag == f"{{{svg_ns}}}defs":
-                return el
-        return None
-
-    defs_ink = find_defs(root_ink)
-    defs_mpl = find_defs(root_mpl)
-
+    # Get or create <defs> in Inkscape SVG
+    defs_ink = root_ink.find("{http://www.w3.org/2000/svg}defs")
     if defs_ink is None:
-        defs_ink = etree.Element(f"{{{svg_ns}}}defs")
-        root_ink.insert(0, defs_ink)
+        defs_ink = etree.SubElement(root_ink, "defs")
 
+    defs_mpl = root_mpl.find("{http://www.w3.org/2000/svg}defs")
     if defs_mpl is not None:
-        existing_ids = {el.get("id") for el in defs_ink if el.get("id")}
-        for el in defs_mpl:
-            el_id = el.get("id")
-            if el_id and el_id in existing_ids:
-                continue  # avoid duplicates by id
-            defs_ink.append(deepcopy(el))
+        existing_ids = {e.get("id") for e in defs_ink.iter() if e.get("id")}
+        for child in defs_mpl:
+            cid = child.get("id")
+            if cid not in existing_ids:
+                defs_ink.append(child)
 
+    # Save
     if output_svg:
         tree_ink.write(output_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
     else:
         return etree.tostring(root_ink, pretty_print=True, encoding='unicode')
+
+
 
 
 
