@@ -34,7 +34,6 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
-    merge_defs(fname,'__temp_mpl__.svg' )
     # replace the mpl block of the inkscape file with the one from the new matplotlib figure
     replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
@@ -44,6 +43,9 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
 
     # remove temporary file
     os.remove('__temp_mpl__.svg')
+
+    add_defs(fname,'__temp_mpl__.svg' )
+
 
     # save fig to an other format
     if pdf: svg_to_pdf(fname)
@@ -201,8 +203,8 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
 
 
 
-def merge_defs(inkscape_svg, mpl_svg, output_svg=None):
-    """Merge <defs> from mpl_svg into inkscape_svg without removing any existing defs."""
+def add_defs(inkscape_svg, mpl_svg, output_svg=None):
+
     parser = etree.XMLParser(remove_blank_text=False)
 
     tree_ink = etree.parse(inkscape_svg, parser)
@@ -224,6 +226,7 @@ def merge_defs(inkscape_svg, mpl_svg, output_svg=None):
             if cid and cid not in existing_ids:
                 defs_ink.append(child)
 
+    # Output
     if output_svg:
         tree_ink.write(output_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
     else:
