@@ -26,7 +26,6 @@ pip install git+https://github.com/felix-cache/mplinkfig.git
 
 
 ## Exemple
-_find the jupyter notebook file in tests_
 
 ### Import packages
 ```console
