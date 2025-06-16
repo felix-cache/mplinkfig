@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display, SVG
 from lxml import etree
-from copy import deepcopy
+import svgutils.transform as sg
 
 def figunits(value,axis='x',fig=None):
     """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') """
@@ -15,7 +15,6 @@ def figunits(value,axis='x',fig=None):
     if axis=='x': return value/w
     if axis=='y': return value/h
     else: print('axis must be \'x\' or \'y\'')
-
 
 
 def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
@@ -34,19 +33,23 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
-    # replace the mpl block of the inkscape file with the one from the new matplotlib figure
+    # if needed put back to lines between blocks
+    reformat_b2l('__temp_mpl__.svg')
+    reformat_b2l(fname)
 
-    add_defs(fname,'__temp_mpl__.svg' )
-    replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
+    # extract the figure element of the mpl file (and save it in a file __temp_elementname__.svg)
+    mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
+
+    # replace the old maptplotlib block by the new one
+    replace_block(fname, 'figure_1')
 
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
 
-    # remove temporary file
-    #os.remove('__temp_mpl__.svg')
-
-
+    # remove temporary files
+    os.remove(mpl_file)
+    os.remove('__temp_mpl__.svg')
 
     # save fig to an other format
     if pdf: svg_to_pdf(fname)
@@ -54,240 +57,13 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
 
     # show inkscape part
     if show:
+        #fig.set_visible(False)
         showSVG(fname)
     return
 
 
+# +
 
-def get_figsize(svgfile):
-    file = open(svgfile,'r')
-    lines=file.readlines()
-    width = ''
-    height = ''
-    for l in lines:
-        if 'width' in l and 'height' in l:
-            for i in range(len(l)):
-                if l[i:i+7]=='width="' :
-                    j=i+7
-                    while l[j]!='"':
-                        width+=l[j]
-                        j+=1
-
-            for i in range(len(l)):
-                if l[i:i+8]=='height="' :
-                    j=i+8
-                    while l[j]!='"':
-                        height+=l[j]
-                        j+=1
-
-            break
-    return width,height
-
-
-
-def create_checkpoint(fname):
-    file = fname
-    path ='./'
-    if '/' in fname :
-        file = os.path.split(fname)[-1]
-        path = os.path.split(fname)[0]
-    if path[-1]!='/':path+='/'
-    # keep 20 saves of the file in .file/
-    if not os.path.isdir(path+'.'+file[:-4]):
-        os.mkdir(path+'.'+file[:-4])
-    flist=np.array(os.listdir(path+'.'+file[:-4]))
-    timestamps,indexes = [],[]
-    for i in range(len(flist)):
-        timestamps.append(datetime.datetime.fromtimestamp(getmtime(path+'.'+file[:-4]+r'/'+flist[i])))
-        indexes.append( int( flist[i] [ len(file[:-4])+1 : len(flist[i])-4 ] ) )
-    timestamps,indexes=np.array(timestamps),np.array(indexes)
-    flist,indexes = flist[timestamps.argsort()], indexes[timestamps.argsort()]
-    timestamps = timestamps.sort()
-    if len(flist)>19:
-         os.remove(path+'.'+file[:-4]+r'/'+flist[0])
-    if len(flist)==0:
-        shutil.copy(path+file, path+'.'+file[:-4]+r'/'+file[:-4]+'_'+str(0)+'.svg')
-    else :
-        shutil.copy(path+file, path+'.'+file[:-4]+r'/'+file[:-4]+'_'+str(indexes.max()+1)+'.svg')
-
-    return
-
-
-def set_figsize(svgfile,width,height):
-    lines = open(svgfile,'r').readlines()
-    done = False
-    f=open(svgfile,'w')
-    for l in lines:
-        if 'width' in l  and not done:
-            for i in range(len(l)):
-                if l[i:i+7]=='width="' :
-                    j=i+7
-                    while l[j]!='"':
-                        j+=1
-                    break
-            f.write(l[:i+7]+width+l[j:] )
-            done = True
-        else :  f.write(l)
-    f.close()
-
-    lines = open(svgfile,'r').readlines()
-    done = False
-    f=open(svgfile,'w')
-    for l in lines:
-        if 'height' in l and not done:
-            for i in range(len(l)):
-                if l[i:i+8]=='height="' :
-                    j=i+8
-                    while l[j]!='"':
-                        j+=1
-                    break
-            f.write(l[:i+8]+height+l[j:] )
-            done = True
-        else :  f.write(l)
-
-    f.close()
-
-    lines = open(svgfile,'r').readlines()
-    done = False
-    f=open(svgfile,'w')
-    for l in lines:
-        if 'viewBox' in l and not done:
-            for i in range(len(l)):
-                if l[i:i+9]=='viewBox="' :
-                    j=i+9
-                    while l[j]!='"':
-                        j+=1
-                    break
-            f.write(l[:i+9]+'0 0 '+width[:-2]+' '+height[:-2]+l[j:] )
-            done = True
-        else :  f.write(l)
-
-    f.close()
-
-    return
-
-
-def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
-
-    parser = etree.XMLParser(remove_blank_text=False)
-
-    # Load both SVGs
-    tree_ink = etree.parse(inkscape_svg, parser)
-    root_ink = tree_ink.getroot()
-
-    tree_mpl = etree.parse(mpl_svg, parser)
-    root_mpl = tree_mpl.getroot()
-
-    ns = root_ink.nsmap.copy()
-    if None in ns:
-        ns['svg'] = ns.pop(None)
-
-    # Find <g id="figure_1"> in both
-    xpath = f'.//svg:g[@id="{blockid}"]'
-    block_mpl = root_mpl.xpath(xpath, namespaces=ns)
-    block_ink = root_ink.xpath(xpath, namespaces=ns)
-
-    if not block_mpl:
-        raise ValueError(f'Block id="{blockid}" not found in {mpl_svg}')
-    if not block_ink:
-        raise ValueError(f'Block id="{blockid}" not found in {inkscape_svg}')
-
-    block_mpl = block_mpl[0]
-    block_ink = block_ink[0]
-
-    # Replace the Inkscape block with the Matplotlib one
-    parent = block_ink.getparent()
-    parent.replace(block_ink, block_mpl)
-
-    # Write back to the Inkscape file
-    tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
-
-
-
-ef add_defs(svg_inkscape_path, svg_mpl_path):
-    # Parse both SVG files
-    parser = etree.XMLParser(remove_blank_text=True)
-    tree_ink = etree.parse(svg_inkscape_path, parser)
-    root_ink = tree_ink.getroot()
-    tree_mpl = etree.parse(svg_mpl_path, parser)
-    root_mpl = tree_mpl.getroot()
-
-    # Namespace handling (usually SVG namespace)
-    ns = root_ink.nsmap.get(None) or "http://www.w3.org/2000/svg"
-    nsmap = {'svg': ns}
-
-    # Find <defs> in both SVGs (create if not found in inkscape svg)
-    defs_ink = root_ink.find('svg:defs', nsmap)
-    if defs_ink is None:
-        defs_ink = etree.SubElement(root_ink, '{%s}defs' % ns)
-
-    defs_mpl = root_mpl.find('svg:defs', nsmap)
-    if defs_mpl is None:
-        print("Matplotlib SVG has no <defs>, nothing to add.")
-        return
-
-    # Collect existing clipPath ids in inkscape defs
-    existing_ids = {elem.get('id') for elem in defs_ink.findall('svg:clipPath', nsmap)}
-
-    # For each clipPath in mpl defs, add it if missing in inkscape defs
-    added_count = 0
-    for clipPath in defs_mpl.findall('svg:clipPath', nsmap):
-        cid = clipPath.get('id')
-        if cid not in existing_ids:
-            defs_ink.append(clipPath)
-            added_count += 1
-
-    if added_count > 0:
-        tree_ink.write(svg_inkscape_path, pretty_print=True, xml_declaration=True, encoding='utf-8')
-        print(f"Added {added_count} missing clipPath(s) to '{svg_inkscape_path}'.")
-    else:
-        print("No missing clipPaths to add.")
-
-
-
-
-
-def svg_to_pdf(fname):
-    """ Needs inkscape in the path to work ! """
-    if fname[-4:]=='.svg' : fname=fname[:-4]
-
-    ik = 'inkscape'
-    if os.name == 'nt':ik+='.exe'
-
-    try:
-        cmd = ik+' '+fname+'.svg -o '+fname+'.pdf'
-        os.system(cmd)
-    except:
-        print('export to pdf failed')
-
-
-def svg_to_png(fname):
-    """ Needs inkscape in the path to work ! """
-    if fname[-4:]=='.svg' : fname=fname[:-4]
-
-    ik = 'inkscape'
-    if os.name == 'nt':ik+='.exe'
-
-    try:
-        cmd = ik+' '+fname+'.svg -o '+fname+'.png'
-        os.system(cmd)
-    except:
-        print('export to png failed')
-
-
-def showSVG(fname):
-    if fname[-4:]!='.svg' : fname+='.svg'
-    try:
-        display(SVG(fname))
-    except:
-        print('error')
-
-
-
-
-
-
-'''
 def replace_block(fname,blockid='figure_1'):
     new_block_lines = open('__temp_'+blockid+'__.svg','r').readlines()
     old_file_lines = open(fname,'r').readlines()
@@ -448,4 +224,152 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
         showSVG(fname)
     return
 
-'''
+
+# -
+
+def get_figsize(svgfile):
+    file = open(svgfile,'r')
+    lines=file.readlines()
+    width = ''
+    height = ''
+    for l in lines:
+        if 'width' in l and 'height' in l:
+            for i in range(len(l)):
+                if l[i:i+7]=='width="' :
+                    j=i+7
+                    while l[j]!='"':
+                        width+=l[j]
+                        j+=1
+
+            for i in range(len(l)):
+                if l[i:i+8]=='height="' :
+                    j=i+8
+                    while l[j]!='"':
+                        height+=l[j]
+                        j+=1
+
+            break
+    return width,height
+
+
+def create_checkpoint(fname):
+    file = fname
+    path ='./'
+    if '/' in fname :
+        file = os.path.split(fname)[-1]
+        path = os.path.split(fname)[0]
+    if path[-1]!='/':path+='/'
+    # keep 20 saves of the file in .file/
+    if not os.path.isdir(path+'.'+file[:-4]):
+        os.mkdir(path+'.'+file[:-4])
+    flist=np.array(os.listdir(path+'.'+file[:-4]))
+    timestamps,indexes = [],[]
+    for i in range(len(flist)):
+        timestamps.append(datetime.datetime.fromtimestamp(getmtime(path+'.'+file[:-4]+r'/'+flist[i])))
+        indexes.append( int( flist[i] [ len(file[:-4])+1 : len(flist[i])-4 ] ) )
+    timestamps,indexes=np.array(timestamps),np.array(indexes)
+    flist,indexes = flist[timestamps.argsort()], indexes[timestamps.argsort()]
+    timestamps = timestamps.sort()
+    if len(flist)>19:
+         os.remove(path+'.'+file[:-4]+r'/'+flist[0])
+    if len(flist)==0:
+        shutil.copy(path+file, path+'.'+file[:-4]+r'/'+file[:-4]+'_'+str(0)+'.svg')
+    else :
+        shutil.copy(path+file, path+'.'+file[:-4]+r'/'+file[:-4]+'_'+str(indexes.max()+1)+'.svg')
+
+    return
+
+
+def set_figsize(svgfile,width,height):
+    lines = open(svgfile,'r').readlines()
+    done = False
+    f=open(svgfile,'w')
+    for l in lines:
+        if 'width' in l  and not done:
+            for i in range(len(l)):
+                if l[i:i+7]=='width="' :
+                    j=i+7
+                    while l[j]!='"':
+                        j+=1
+                    break
+            f.write(l[:i+7]+width+l[j:] )
+            done = True
+        else :  f.write(l)
+    f.close()
+
+    lines = open(svgfile,'r').readlines()
+    done = False
+    f=open(svgfile,'w')
+    for l in lines:
+        if 'height' in l and not done:
+            for i in range(len(l)):
+                if l[i:i+8]=='height="' :
+                    j=i+8
+                    while l[j]!='"':
+                        j+=1
+                    break
+            f.write(l[:i+8]+height+l[j:] )
+            done = True
+        else :  f.write(l)
+
+    f.close()
+
+    lines = open(svgfile,'r').readlines()
+    done = False
+    f=open(svgfile,'w')
+    for l in lines:
+        if 'viewBox' in l and not done:
+            for i in range(len(l)):
+                if l[i:i+9]=='viewBox="' :
+                    j=i+9
+                    while l[j]!='"':
+                        j+=1
+                    break
+            f.write(l[:i+9]+'0 0 '+width[:-2]+' '+height[:-2]+l[j:] )
+            done = True
+        else :  f.write(l)
+
+    f.close()
+
+    return
+
+
+
+def svg_to_pdf(fname):
+    """ Needs inkscape in the path to work ! """
+    if fname[-4:]=='.svg' : fname=fname[:-4]
+
+    ik = 'inkscape'
+    if os.name == 'nt':ik+='.exe'
+
+    try:
+        cmd = ik+' '+fname+'.svg -o '+fname+'.pdf'
+        os.system(cmd)
+    except:
+        print('export to pdf failed')
+
+
+def svg_to_png(fname):
+    """ Needs inkscape in the path to work ! """
+    if fname[-4:]=='.svg' : fname=fname[:-4]
+
+    ik = 'inkscape'
+    if os.name == 'nt':ik+='.exe'
+
+    try:
+        cmd = ik+' '+fname+'.svg -o '+fname+'.png'
+        os.system(cmd)
+    except:
+        print('export to png failed')
+
+
+def showSVG(fname):
+    if fname[-4:]!='.svg' : fname+='.svg'
+    try:
+        display(SVG(fname))
+    except:
+        print('error')
+
+
+
+
