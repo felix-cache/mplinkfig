@@ -200,7 +200,9 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
     tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
 
 
+
 def merge_defs(inkscape_svg, mpl_svg, output_svg=None):
+    """Merge <defs> from mpl_svg into inkscape_svg without removing any existing defs."""
     parser = etree.XMLParser(remove_blank_text=False)
 
     tree_ink = etree.parse(inkscape_svg, parser)
@@ -209,26 +211,23 @@ def merge_defs(inkscape_svg, mpl_svg, output_svg=None):
     tree_mpl = etree.parse(mpl_svg, parser)
     root_mpl = tree_mpl.getroot()
 
-    # Get or create <defs> in Inkscape SVG
-    defs_ink = root_ink.find("{http://www.w3.org/2000/svg}defs")
+    ns = {'svg': 'http://www.w3.org/2000/svg'}
+    defs_ink = root_ink.find('svg:defs', namespaces=ns)
     if defs_ink is None:
-        defs_ink = etree.SubElement(root_ink, "defs")
+        defs_ink = etree.SubElement(root_ink, '{http://www.w3.org/2000/svg}defs')
 
-    defs_mpl = root_mpl.find("{http://www.w3.org/2000/svg}defs")
+    defs_mpl = root_mpl.find('svg:defs', namespaces=ns)
     if defs_mpl is not None:
         existing_ids = {e.get("id") for e in defs_ink.iter() if e.get("id")}
         for child in defs_mpl:
             cid = child.get("id")
-            if cid not in existing_ids:
+            if cid and cid not in existing_ids:
                 defs_ink.append(child)
 
-    # Save
     if output_svg:
         tree_ink.write(output_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
     else:
         return etree.tostring(root_ink, pretty_print=True, encoding='unicode')
-
-
 
 
 
