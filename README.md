@@ -111,12 +111,8 @@ ax.set_ylabel('ylabel2')
 ```console
 InkFig(fig, 'exemple.svg', show=True)
 ```
-![Alt text](./tests/ex0.svg)
 
-### After some modifications with inkscape
-![Alt text](./tests/ex1.svg)
-
-### Now we can modify the figure with mpl without loosing the modifications performed with inkscape
+### After some modifications with inkscape, we can modify the figure with mpl without loosing the modifications performed with inkscape
 ```console
 fig = plt.figure(figsize=(fw,fw/.8))
 
@@ -144,8 +140,6 @@ ax.legend(frameon=False)
 
 InkFig(fig,'exemple.svg', show=True)
 ```
-![Alt text](./tests/ex2.svg)
-
 We can restart these operations until we obtain the desired result.
 
 Each time you run InkFig(fig,'path/filename.svg'), a copy of the previous version is saved in path/.filename. Above 20 executions the oldest versions are deleted.
