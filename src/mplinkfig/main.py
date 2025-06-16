@@ -44,7 +44,7 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
         set_figsize(fname,width,height)
 
     # remove temporary file
-    os.remove('__temp_mpl__.svg')
+    #os.remove('__temp_mpl__.svg')
 
 
 
