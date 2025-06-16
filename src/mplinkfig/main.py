@@ -37,6 +37,8 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # replace the mpl block of the inkscape file with the one from the new matplotlib figure
     replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
+    add_defs(fname,'__temp_mpl__.svg' )
+
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
@@ -44,7 +46,6 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # remove temporary file
     os.remove('__temp_mpl__.svg')
 
-    add_defs(fname,'__temp_mpl__.svg' )
 
 
     # save fig to an other format
@@ -227,10 +228,8 @@ def add_defs(inkscape_svg, mpl_svg, output_svg=None):
                 defs_ink.append(child)
 
     # Output
-    if output_svg:
-        tree_ink.write(output_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
-    else:
-        return etree.tostring(root_ink, pretty_print=True, encoding='unicode')
+    tree_ink.write(inkscape_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
+
 
 
 
