@@ -165,10 +165,15 @@ def set_figsize(svgfile,width,height):
 
 
 def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
+    """
+    Replace the <g id=...> block and optionally <defs> in the Inkscape-edited SVG
+    with the versions from the Matplotlib-generated SVG.
 
+    This ensures clipping paths and marker styles (like arrow heads) are preserved.
+    """
     parser = etree.XMLParser(remove_blank_text=False)
 
-    # Load both SVGs
+    # Parse both SVGs
     tree_ink = etree.parse(inkscape_svg, parser)
     root_ink = tree_ink.getroot()
 
@@ -179,10 +184,9 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
     if None in ns:
         ns['svg'] = ns.pop(None)
 
-    # Find <g id="figure_1"> in both
-    xpath = f'.//svg:g[@id="{blockid}"]'
-    block_mpl = root_mpl.xpath(xpath, namespaces=ns)
-    block_ink = root_ink.xpath(xpath, namespaces=ns)
+    # Replace the <g id="figure_1"> element
+    block_mpl = root_mpl.xpath(f'.//svg:g[@id="{blockid}"]', namespaces=ns)
+    block_ink = root_ink.xpath(f'.//svg:g[@id="{blockid}"]', namespaces=ns)
 
     if not block_mpl:
         raise ValueError(f'Block id="{blockid}" not found in {mpl_svg}')
@@ -191,12 +195,20 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
 
     block_mpl = block_mpl[0]
     block_ink = block_ink[0]
+    block_ink.getparent().replace(block_ink, block_mpl)
 
-    # Replace the Inkscape block with the Matplotlib one
-    parent = block_ink.getparent()
-    parent.replace(block_ink, block_mpl)
+    # Replace or insert <defs> to ensure clipPaths are preserved
+    defs_mpl = root_mpl.find('svg:defs', namespaces=ns)
+    defs_ink = root_ink.find('svg:defs', namespaces=ns)
 
-    # Write back to the Inkscape file
+    if defs_mpl is not None:
+        if defs_ink is not None:
+            root_ink.replace(defs_ink, defs_mpl)
+        else:
+            # insert defs_mpl at the top of the children list
+            root_ink.insert(0, defs_mpl)
+
+    # Write updated SVG back
     tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
 
 
