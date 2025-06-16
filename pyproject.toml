@@ -31,7 +31,6 @@ dependencies = [
   "ipython",
   "matplotlib",
   "numpy",
-  "lxml",
 ]
 
 [project.urls]

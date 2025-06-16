@@ -5,8 +5,7 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display, SVG
-from lxml import etree
-import svgutils.transform as sg
+
 
 def figunits(value,axis='x',fig=None):
     """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') aazfzfofio"""
