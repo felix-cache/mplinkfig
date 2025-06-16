@@ -46,10 +46,15 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     # adjust the size if needed
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
-
+    
+    # change xml:space="preserve" to 'xml:space="default" in order to avoid 
+    # auto adding of spaces at the text boxes beginning
+    fix_xml_space(fname)
+    
     # remove temporary files
     os.remove(mpl_file)
     os.remove('__temp_mpl__.svg')
+    
 
     # save fig to an other format
     if pdf: svg_to_pdf(fname)
@@ -60,6 +65,14 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
         #fig.set_visible(False)
         showSVG(fname)
     return
+
+
+def fix_xml_space(svgfile):
+    with open(svgfile, 'r') as f:
+        content = f.read()
+    content = content.replace('xml:space="preserve"', 'xml:space="default"')
+    with open(svgfile, 'w') as f:
+        f.write(content)
 
 
 # +
