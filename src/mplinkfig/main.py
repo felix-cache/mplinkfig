@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display, SVG
 from lxml import etree
-
+from copy import deepcopy
 
 def figunits(value,axis='x',fig=None):
     """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') """
@@ -34,6 +34,7 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
+    merge_defs_blocks(fname,'__temp_mpl__.svg' )
     # replace the mpl block of the inkscape file with the one from the new matplotlib figure
     replace_mpl_figure_block(fname, '__temp_mpl__.svg', 'figure_1')
 
@@ -163,17 +164,11 @@ def set_figsize(svgfile,width,height):
     return
 
 
-
 def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
-    """
-    Replace the <g id=...> block and optionally <defs> in the Inkscape-edited SVG
-    with the versions from the Matplotlib-generated SVG.
 
-    This ensures clipping paths and marker styles (like arrow heads) are preserved.
-    """
     parser = etree.XMLParser(remove_blank_text=False)
 
-    # Parse both SVGs
+    # Load both SVGs
     tree_ink = etree.parse(inkscape_svg, parser)
     root_ink = tree_ink.getroot()
 
@@ -184,9 +179,10 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
     if None in ns:
         ns['svg'] = ns.pop(None)
 
-    # Replace the <g id="figure_1"> element
-    block_mpl = root_mpl.xpath(f'.//svg:g[@id="{blockid}"]', namespaces=ns)
-    block_ink = root_ink.xpath(f'.//svg:g[@id="{blockid}"]', namespaces=ns)
+    # Find <g id="figure_1"> in both
+    xpath = f'.//svg:g[@id="{blockid}"]'
+    block_mpl = root_mpl.xpath(xpath, namespaces=ns)
+    block_ink = root_ink.xpath(xpath, namespaces=ns)
 
     if not block_mpl:
         raise ValueError(f'Block id="{blockid}" not found in {mpl_svg}')
@@ -195,21 +191,54 @@ def replace_mpl_figure_block(inkscape_svg, mpl_svg, blockid='figure_1'):
 
     block_mpl = block_mpl[0]
     block_ink = block_ink[0]
-    block_ink.getparent().replace(block_ink, block_mpl)
 
-    # Replace or insert <defs> to ensure clipPaths are preserved
-    defs_mpl = root_mpl.find('svg:defs', namespaces=ns)
-    defs_ink = root_ink.find('svg:defs', namespaces=ns)
+    # Replace the Inkscape block with the Matplotlib one
+    parent = block_ink.getparent()
+    parent.replace(block_ink, block_mpl)
+
+    # Write back to the Inkscape file
+    tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
+
+
+def merge_defs_blocks(inkscape_svg, mpl_svg, output_svg=None):
+    """
+    Merge <defs> from Matplotlib SVG into the existing Inkscape SVG without removing Inkscape-defined elements.
+    Avoids duplication by checking id attributes.
+    """
+    parser = etree.XMLParser(remove_blank_text=False)
+    tree_ink = etree.parse(inkscape_svg, parser)
+    root_ink = tree_ink.getroot()
+    tree_mpl = etree.parse(mpl_svg, parser)
+    root_mpl = tree_mpl.getroot()
+
+    nsmap = root_ink.nsmap
+    svg_ns = nsmap.get(None, 'http://www.w3.org/2000/svg')
+
+    def find_defs(root):
+        for el in root:
+            if el.tag == f"{{{svg_ns}}}defs":
+                return el
+        return None
+
+    defs_ink = find_defs(root_ink)
+    defs_mpl = find_defs(root_mpl)
+
+    if defs_ink is None:
+        defs_ink = etree.Element(f"{{{svg_ns}}}defs")
+        root_ink.insert(0, defs_ink)
 
     if defs_mpl is not None:
-        if defs_ink is not None:
-            root_ink.replace(defs_ink, defs_mpl)
-        else:
-            # insert defs_mpl at the top of the children list
-            root_ink.insert(0, defs_mpl)
+        existing_ids = {el.get("id") for el in defs_ink if el.get("id")}
+        for el in defs_mpl:
+            el_id = el.get("id")
+            if el_id and el_id in existing_ids:
+                continue  # avoid duplicates by id
+            defs_ink.append(deepcopy(el))
 
-    # Write updated SVG back
-    tree_ink.write(inkscape_svg, encoding='utf-8', pretty_print=True, xml_declaration=True)
+    if output_svg:
+        tree_ink.write(output_svg, pretty_print=True, xml_declaration=True, encoding='utf-8')
+    else:
+        return etree.tostring(root_ink, pretty_print=True, encoding='unicode')
 
 
 
