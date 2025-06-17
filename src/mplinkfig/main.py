@@ -16,7 +16,7 @@ def figunits(value,axis='x',fig=None):
     else: print('axis must be \'x\' or \'y\'')
 
 
-def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
+def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False, inkscape_path=None):
     """ actualize the figure elements created with matplotlib while keeping the changes perforemd with inkscape """
 
     if fname[-3:]!='svg': fname+='.svg'
@@ -51,8 +51,8 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     os.remove('__temp_mpl__.svg')
     
     # save fig to an other format
-    if pdf: svg_to_pdf(fname)
-    if png: svg_to_png(fname)
+    if pdf: svg_to_pdf(fname, inkscape_path)
+    if png: svg_to_png(fname, inkscape_path)
 
     # show inkscape part
     if show:
@@ -261,12 +261,12 @@ def set_figsize(svgfile,width,height):
     return
 
 
-def svg_to_pdf(fname):
-    """ Needs inkscape in the path to work ! """
+def svg_to_pdf(fname,ik):
     if fname[-4:]=='.svg' : fname=fname[:-4]
 
-    ik = 'inkscape'
-    if os.name == 'nt':ik+='.exe'
+    if ik is None:
+        ik = 'inkscape'
+        if os.name == 'nt':ik+='.exe'
 
     try:
         cmd = ik+' '+fname+'.svg -o '+fname+'.pdf'
@@ -275,18 +275,19 @@ def svg_to_pdf(fname):
         print('export to pdf failed')
 
 
-def svg_to_png(fname):
-    """ Needs inkscape in the path to work ! """
+def svg_to_png(fname,ik):
     if fname[-4:]=='.svg' : fname=fname[:-4]
 
-    ik = 'inkscape'
-    if os.name == 'nt':ik+='.exe'
+    if ik is None:
+        ik = 'inkscape'
+        if os.name == 'nt':ik+='.exe'
 
     try:
         cmd = ik+' '+fname+'.svg -o '+fname+'.png'
         os.system(cmd)
     except:
         print('export to png failed')
+
 
 
 def showSVG(fname):
