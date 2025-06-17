@@ -5,10 +5,10 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display, SVG
-
+from lxml import etree
 
 def figunits(value,axis='x',fig=None):
-    """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') aazfzfofio"""
+    """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') """
     if fig == None: fig = plt.gcf()
     w,h = fig.get_size_inches()
     if axis=='x': return value/w
@@ -32,9 +32,9 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     fig.savefig('__temp_mpl__.svg', transparent=transparent)
     width, height = get_figsize('__temp_mpl__.svg')
 
-    # if needed put back to lines between blocks
-    reformat_b2l('__temp_mpl__.svg')
-    reformat_b2l(fname)
+    # good line breaks for the following manual parsing
+    prettify('__temp_mpl__.svg')
+    prettify(fname)
 
     # extract the figure element of the mpl file (and save it in a file __temp_elementname__.svg)
     mpl_file = create_block_file('__temp_mpl__.svg','figure_1')
@@ -46,15 +46,10 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
     if get_figsize(fname) != (width,height) :
         set_figsize(fname,width,height)
     
-    # change xml:space="preserve" to 'xml:space="default" in order to avoid 
-    # auto adding of spaces at the text boxes beginning
-    fix_xml_space(fname)
-    
     # remove temporary files
     os.remove(mpl_file)
     os.remove('__temp_mpl__.svg')
     
-
     # save fig to an other format
     if pdf: svg_to_pdf(fname)
     if png: svg_to_png(fname)
@@ -65,16 +60,6 @@ def InkFig(fig, fname, transparent=False, show=False, pdf=False, png=False):
         showSVG(fname)
     return
 
-
-def fix_xml_space(svgfile):
-    with open(svgfile, 'r') as f:
-        content = f.read()
-    content = content.replace('xml:space="preserve"', 'xml:space="default"')
-    with open(svgfile, 'w') as f:
-        f.write(content)
-
-
-# +
 
 def replace_block(fname,blockid='figure_1'):
     new_block_lines = open('__temp_'+blockid+'__.svg','r').readlines()
@@ -120,6 +105,7 @@ def replace_block(fname,blockid='figure_1'):
     f.close()
     return
 
+
 def create_block_file(fname, blockid='figure_1'):
     lines = open(fname,'r').readlines()
 
@@ -160,34 +146,12 @@ def create_block_file(fname, blockid='figure_1'):
 
     f.close()
 
-
     return '__temp_'+blockid+'__.svg'
 
 
-def reformat_b2l(fname):
-    lines = open(fname,'r').readlines()
-    f = open(fname,'w')
-    new_lines = []
-    b2l = lines[0][-1]
-    add_line = True
-    i=0
-    while i < len(lines):
-        if add_line: new_lines.append(lines[i])
-        l = new_lines[-1]
-        for j in range(len(l)):
-            add_line = True
-            if l[j:j+2]=='><':
-                new_lines[-1]= l[:j+1]+b2l
-                new_lines.append(l[j+1:])
-                add_line = False
-                break
-        if j==len(l)-1:
-            add_line = True
-            i+=1
-    for l in new_lines: f.write(l)
-    f.close()
-
-
+def prettify(fname):
+    tree = etree.parse(fname)
+    tree.write(fname, pretty_print=True)
 
 
 def get_figsize(svgfile):
@@ -297,7 +261,6 @@ def set_figsize(svgfile,width,height):
     return
 
 
-
 def svg_to_pdf(fname):
     """ Needs inkscape in the path to work ! """
     if fname[-4:]=='.svg' : fname=fname[:-4]
@@ -334,5 +297,32 @@ def showSVG(fname):
         print('error')
 
 
+#def reformat_b2l(fname):
+    #lines = open(fname,'r').readlines()
+    #f = open(fname,'w')
+    #new_lines = []
+    #b2l = lines[0][-1]
+    #add_line = True
+    #i=0
+    #while i < len(lines):
+        #if add_line: new_lines.append(lines[i])
+        #l = new_lines[-1]
+        #for j in range(len(l)):
+            #add_line = True
+            #if l[j:j+2]=='><':
+                #new_lines[-1]= l[:j+1]+b2l
+                #new_lines.append(l[j+1:])
+                #add_line = False
+                #break
+        #if j==len(l)-1:
+            #add_line = True
+            #i+=1
+    #for l in new_lines: f.write(l)
+    #f.close()
 
-
+#def fix_xml_space(svgfile):
+    #with open(svgfile, 'r') as f:
+        #content = f.read()
+    #content = content.replace('xml:space="preserve"', 'xml:space="default"')
+    #with open(svgfile, 'w') as f:
+        #f.write(content)
