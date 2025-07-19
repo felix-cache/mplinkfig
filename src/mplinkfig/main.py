@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display, SVG
 from lxml import etree
+from lxml.etree import XMLParser, parse
+huge_parser = XMLParser(huge_tree=True)
 
 def figunits(value,axis='x',fig=None):
     """ convert inches to figure units (fraction of the width if axis='x', height if axis='y') """
@@ -150,7 +152,7 @@ def create_block_file(fname, blockid='figure_1'):
 
 
 def prettify(fname):
-    tree = etree.parse(fname)
+    tree = etree.parse(fname,parser = huge_parser )
     tree.write(fname, pretty_print=True)
 
 
