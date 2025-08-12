@@ -263,7 +263,7 @@ def set_figsize(svgfile,width,height):
     return
 
 
-def svg_to_pdf(fname,ik):
+def svg_to_pdf(fname,ik=None):
     if fname[-4:]=='.svg' : fname=fname[:-4]
 
     if ik is None:
@@ -277,7 +277,7 @@ def svg_to_pdf(fname,ik):
         print('export to pdf failed')
 
 
-def svg_to_png(fname,ik):
+def svg_to_png(fname,ik=None):
     if fname[-4:]=='.svg' : fname=fname[:-4]
 
     if ik is None:
